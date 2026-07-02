@@ -5,6 +5,13 @@ const redisConfig = {
     family: 0, // Force IPv4/IPv6 auto-detection (fixes Render ETIMEDOUT on Node 18+)
 };
 
+// If the URL is "rediss://" (Secure TLS, usually External Render URLs), we need to allow unauthorized certs for Render
+if (process.env.REDIS_URL && process.env.REDIS_URL.startsWith("rediss://")) {
+    redisConfig.tls = {
+        rejectUnauthorized: false,
+    };
+}
+
 const connection = process.env.REDIS_URL 
     ? new Redis(process.env.REDIS_URL, redisConfig)
     : new Redis({

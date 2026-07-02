@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "postinstall": "npx prisma generate",
+    "postinstall": "npx prisma generate && npx prisma db push",
     "build": "npx prisma generate",
     "dev": "nodemon src/index.js",
     "dev:worker": "nodemon src/worker.js",
