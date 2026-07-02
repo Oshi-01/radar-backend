@@ -1,0 +1,189 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Portal {
+  id String @id @default(cuid())
+
+  portalId String @unique
+
+  accessToken String?
+  refreshToken String?
+
+  expiresAt DateTime?
+
+  hubId String?
+  
+  installerEmail String?
+  hubDomain String?
+
+  installedAt DateTime @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  settings Settings?
+  companies CompanyHealth[]
+  deals Deal[]
+  tickets Ticket[]
+  engagements Engagement[]
+  contacts Contact[]
+}
+
+model Settings {
+  id                String   @id @default(cuid())
+
+  portalId          String   @unique
+
+  dealWeight        Int      @default(20)
+  ticketWeight      Int      @default(20)
+  engagementWeight  Int      @default(30)
+  signalWeight      Int      @default(30)
+  rulesConfig       Json?
+  riskThresholds    Json?
+
+  renewalPipelineId String?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  portal            Portal @relation(fields: [portalId], references: [portalId], onDelete: Cascade)
+
+  @@map("settings")
+}
+
+model CompanyHealth {
+  id                String   @id @default(cuid())
+
+  portalId          String
+  companyId         String
+
+  companyName       String?
+
+  score             Int?
+  riskLevel         String   @default("pending")
+
+  hubspotCreatedAt  DateTime?
+  renewalDate       DateTime?
+
+  trend             Int?
+
+  lastCalculatedAt  DateTime?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  portal            Portal @relation(fields: [portalId], references: [portalId], onDelete: Cascade)
+
+  history           HealthHistory[]
+
+  @@unique([portalId, companyId])
+
+  @@map("company_health")
+}
+
+model HealthHistory {
+  id                String   @id @default(cuid())
+
+  companyHealthId   String
+
+  previousScore     Int
+  newScore          Int
+
+  reason            Json?
+
+  createdAt         DateTime @default(now())
+
+  companyHealth     CompanyHealth @relation(fields: [companyHealthId], references: [id], onDelete: Cascade)
+
+  @@map("health_history")
+}
+
+model WebhookEvent {
+  id                String   @id @default(cuid())
+
+  portalId          String?
+
+  eventType         String
+
+  objectType        String
+
+  objectId          String
+
+  processed         Boolean  @default(false)
+
+  payload           Json?
+
+  createdAt         DateTime @default(now())
+
+  @@map("webhook_events")
+}
+
+model Deal {
+  id String @id @default(cuid())
+  portalId String
+  companyId String
+  dealId String
+  
+  amount Float?
+  stage String?
+  closeDate DateTime?
+  lastModifiedDate DateTime?
+
+  portal Portal @relation(fields: [portalId], references: [portalId], onDelete: Cascade)
+
+  @@unique([portalId, dealId, companyId])
+  @@index([portalId, companyId])
+  @@map("deals")
+}
+
+model Ticket {
+  id String @id @default(cuid())
+  portalId String
+  companyId String
+  ticketId String
+
+  subject String?
+  stage String?
+  priority String?
+  createdDate DateTime?
+
+  portal Portal @relation(fields: [portalId], references: [portalId], onDelete: Cascade)
+
+  @@unique([portalId, ticketId, companyId])
+  @@index([portalId, companyId])
+  @@map("tickets")
+}
+
+model Engagement {
+  id String @id @default(cuid())
+  portalId String
+  companyId String
+  engagementId String
+
+  type String // "MEETING" or "EMAIL"
+  timestamp DateTime?
+
+  portal Portal @relation(fields: [portalId], references: [portalId], onDelete: Cascade)
+
+  @@unique([portalId, engagementId, companyId])
+  @@index([portalId, companyId])
+  @@map("engagements")
+}
+
+model Contact {
+  id String @id @default(cuid())
+  portalId String
+  companyId String
+  contactId String
+
+  portal Portal @relation(fields: [portalId], references: [portalId], onDelete: Cascade)
+
+  @@unique([portalId, contactId, companyId])
+  @@index([portalId, companyId])
+  @@map("contacts")
+}
