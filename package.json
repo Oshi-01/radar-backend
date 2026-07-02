@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build": "npx prisma generate",
     "dev": "nodemon src/index.js",
     "dev:worker": "nodemon src/worker.js",
     "start": "node src/index.js",
