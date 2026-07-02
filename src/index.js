@@ -34,4 +34,9 @@ const PORT = process.env.PORT || 8000;
 
 app.listen(PORT, () => {
     console.log(`Server running on port http://localhost:${PORT}`);
+
+    // Start background workers in the same process (for single-service hosting)
+    const { startWorkers } = require("./workers");
+    console.log("Starting Radar Background Workers in API process...");
+    startWorkers();
 });
