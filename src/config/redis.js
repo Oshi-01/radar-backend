@@ -2,6 +2,7 @@ const Redis = require("ioredis");
 
 const redisConfig = {
     maxRetriesPerRequest: null,
+    family: 0, // Force IPv4/IPv6 auto-detection (fixes Render ETIMEDOUT on Node 18+)
 };
 
 const connection = process.env.REDIS_URL 
