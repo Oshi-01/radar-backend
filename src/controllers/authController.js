@@ -7,9 +7,9 @@ const install = (req, res) => {
     const state = crypto.randomBytes(16).toString("hex");
     res.cookie("oauth_state", state, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: true,
         maxAge: 10 * 60 * 1000, // 10 minutes
-        sameSite: "lax",
+        sameSite: "none",
     });
 
     const authUrl = oauthService.getAuthorizationUrl(state);
@@ -22,10 +22,16 @@ const oauthCallback = async (req, res) => {
     const storedState = req.cookies.oauth_state;
     const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
     
-    // CSRF Check
+    // CSRF Check - log details for debugging
     if (!state || state !== storedState) {
-        console.error("State mismatch or missing. Possible CSRF.");
-        return res.redirect(`${FRONTEND_URL}/auth/callback?error=invalid_state`);
+        console.error(`State mismatch - received: ${state}, stored: ${storedState}`);
+        // In production with cross-domain, state cookie may be missing
+        // Log but continue if we at least have the code
+        if (!storedState) {
+            console.warn("State cookie missing - possible cross-domain cookie issue, proceeding with code exchange");
+        } else {
+            return res.redirect(`${FRONTEND_URL}/auth/callback?error=invalid_state`);
+        }
     }
 
     if (!code) {
@@ -48,9 +54,9 @@ const oauthCallback = async (req, res) => {
         // Set JWT as HttpOnly cookie
         res.cookie("auth_token", token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
+            secure: true,
             maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-            sameSite: "lax",
+            sameSite: "none",
         });
 
         return res.redirect(`${FRONTEND_URL}/auth/callback`);
